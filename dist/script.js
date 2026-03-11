@@ -1,78 +1,59 @@
 const USER = 'ashmaker000';
 const API = `https://api.github.com/users/${USER}/repos?per_page=100&sort=updated`;
 
-const el = {
+const els = {
   meta: document.getElementById('profileMeta'),
-  featured: document.querySelector('[data-bucket="featured"]'),
-  beamng: document.querySelector('[data-bucket="beamng"]'),
-  web: document.querySelector('[data-bucket="web"]'),
-  tools: document.querySelector('[data-bucket="tools"]'),
-  all: document.querySelector('[data-bucket="all"]'),
-  tpl: document.getElementById('repoCardTemplate')
+  featured: document.getElementById('featuredList'),
+  beamng: document.getElementById('beamngList'),
+  web: document.getElementById('webList'),
+  tools: document.getElementById('toolsList'),
+  all: document.getElementById('allList'),
 };
 
 const has = (s, arr) => arr.some(k => (s || '').toLowerCase().includes(k));
-
 function bucket(repo) {
   const text = `${repo.name} ${repo.description || ''}`.toLowerCase();
   if (has(text, ['beamng', 'beammp', 'mod', 'map'])) return 'beamng';
-  if (has(text, ['bot', 'discord', 'telegram', 'web', 'site', 'api', 'automation', 'n8n'])) return 'web';
-  if (has(text, ['tool', 'script', 'cli', 'python', 'lua', 'util'])) return 'tools';
+  if (has(text, ['bot', 'discord', 'telegram', 'web', 'site', 'automation', 'n8n', 'api'])) return 'web';
   return 'tools';
 }
 
 function card(repo) {
-  const node = el.tpl.content.firstElementChild.cloneNode(true);
-  const link = node.querySelector('h3 a');
-  link.href = repo.html_url;
-  link.textContent = repo.name;
-  node.querySelector('.desc').textContent = repo.description || 'No description yet.';
-
-  const chips = node.querySelector('.chips');
-  [repo.language, repo.private ? 'private' : 'public', repo.archived ? 'archived' : 'active']
-    .filter(Boolean)
-    .forEach(c => {
-      const tag = document.createElement('span');
-      tag.textContent = c;
-      chips.appendChild(tag);
-    });
-
-  node.querySelector('.stats').textContent = `★ ${repo.stargazers_count}  ·  Forks ${repo.forks_count}  ·  Updated ${new Date(repo.updated_at).toLocaleDateString()}`;
-  return node;
+  return `<article class="repo-card">
+    <h3><a href="${repo.html_url}" target="_blank" rel="noreferrer">${repo.name}</a></h3>
+    <div class="desc">${repo.description || 'No description yet.'}</div>
+    <div class="meta">${repo.language || 'Unknown'} • ★ ${repo.stargazers_count} • Updated ${new Date(repo.updated_at).toLocaleDateString()}</div>
+  </article>`;
 }
 
-function renderList(target, repos) {
-  target.innerHTML = '';
+function render(el, repos) {
   if (!repos.length) {
-    target.innerHTML = '<div class="empty">No repositories in this section yet.</div>';
+    el.innerHTML = '<div class="empty">No repositories in this section.</div>';
     return;
   }
-  repos.forEach(r => target.appendChild(card(r)));
+  el.innerHTML = repos.map(card).join('');
 }
 
-async function main() {
+async function loadRepos() {
   try {
     const res = await fetch(API, { headers: { Accept: 'application/vnd.github+json' } });
-    if (!res.ok) throw new Error(`GitHub API error ${res.status}`);
-    const repos = await res.json();
+    if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+    const repos = (await res.json()).filter(r => !r.fork)
+      .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
-    const active = repos.filter(r => !r.fork).sort((a,b) => new Date(b.updated_at) - new Date(a.updated_at));
-    const featured = active.slice(0, 6);
-    const beamng = active.filter(r => bucket(r) === 'beamng');
-    const web = active.filter(r => bucket(r) === 'web');
-    const tools = active.filter(r => bucket(r) === 'tools');
+    render(els.featured, repos.slice(0, 6));
+    render(els.beamng, repos.filter(r => bucket(r) === 'beamng'));
+    render(els.web, repos.filter(r => bucket(r) === 'web'));
+    render(els.tools, repos.filter(r => bucket(r) === 'tools'));
+    render(els.all, repos);
 
-    renderList(el.featured, featured);
-    renderList(el.beamng, beamng);
-    renderList(el.web, web);
-    renderList(el.tools, tools);
-    renderList(el.all, active);
-
-    el.meta.textContent = `${active.length} repositories loaded • last refresh ${new Date().toLocaleTimeString()}`;
-  } catch (err) {
-    el.meta.textContent = `Failed to load repos: ${err.message}`;
-    [el.featured, el.beamng, el.web, el.tools, el.all].forEach(t => t.innerHTML = '<div class="empty">Unable to load repos right now.</div>');
+    els.meta.textContent = `${repos.length} repos loaded from github.com/${USER}`;
+  } catch (e) {
+    Object.values(els).forEach(v => {
+      if (v && v !== els.meta) v.innerHTML = '<div class="empty">Failed to load repositories.</div>';
+    });
+    els.meta.textContent = `Failed to load repositories: ${e.message}`;
   }
 }
 
-main();
+loadRepos();
