@@ -45,7 +45,7 @@ a:focus-visible .icon, input:focus-visible, button:focus-visible { outline: 3px 
   width: min(1050px, calc(100vw - 250px)); height: min(84vh, 780px);
   margin: auto; text-align: left; font-size: 20px; line-height: 1.2;
   transform: translateX(360%); transition: all .45s cubic-bezier(.25, 1, .5, 1.25);
-  padding: 22px 24px; border-radius: var(--radius-lg); background: var(--panel-bg);
+  padding: 22px 24px 42px; border-radius: var(--radius-lg); background: var(--panel-bg);
   overflow: auto; box-shadow: var(--shadow); content-visibility: auto;
 }
 .page#p1 .icon.page-content { transform: translateX(0) !important; }
@@ -150,3 +150,49 @@ a:focus-visible .icon, input:focus-visible, button:focus-visible { outline: 3px 
   background: linear-gradient(180deg, rgba(200, 214, 255, 0.98), rgba(151, 171, 255, 0.95));
 }
 
+
+
+.social-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  background: rgba(8, 10, 24, 0.5);
+  backdrop-filter: blur(6px);
+  border-top: 1px solid rgba(255,255,255,0.14);
+}
+
+.social-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 14px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: rgba(255,255,255,0.95);
+}
+
+.social-title {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-right: 4px;
+}
+
+.social-link {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.24);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  text-decoration: none;
+}
+
+.social-link:hover { background: rgba(255,255,255,0.2); }
+.social-link.muted { opacity: 0.55; pointer-events: none; }
+
+@media (max-width: 900px) {
+  .social-footer { display: none; }
+}
