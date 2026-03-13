@@ -4,8 +4,8 @@ const ACTIVE_TOPICS = ['wip', 'active', 'current', 'in-progress'];
 const ACTIVE_DAYS_FALLBACK = 21;
 const PINNED_REPOS = ['BeamMP-PropHunt', 'BeamMP-Traffic', 'BeamMP-Tag', 'BeamMP-CnR', 'BeamMP-CarHunt', 'ashmaker000.github.io'];
 const THUMBNAILS = {
-  "BeamMP-PropHunt": "./assets/thumbs/prophunt.jpg",
-  "BeamMP-Traffic": "./assets/thumbs/traffic.jpg",
+  "BeamMP-PropHunt": "./assets/thumbs/prophunt.png",
+  "BeamMP-Traffic": "./assets/thumbs/traffic.png",
   "ashmaker000.github.io": "./assets/thumbs/portfolio.jpg"
 };
 const CASE_LINKS = {
