@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ashmaker000 • Projects</title>
   <meta name="description" content="ashmaker000 projects: BeamNG/BeamMP mods, web automation, and tooling." />
+
+  <meta property="og:title" content="ashmaker000 • Projects" />
+  <meta property="og:description" content="BeamNG/BeamMP mods, web automation, and tools built by ashmaker000." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://ashmaker000.github.io/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ashmaker000 • Projects" />
+  <meta name="twitter:description" content="BeamNG/BeamMP mods, web automation, and tools built by ashmaker000." />
+
+  <link rel="preconnect" href="https://api.github.com" crossorigin />
   <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.css" />
   <link rel="stylesheet" href="./style.css" />
@@ -29,7 +39,17 @@
               <section class="icon fa fa-bolt page-content" aria-live="polite">
                 <span class="title">ashmaker000 · Currently Working On</span>
                 <span class="hint" id="profileMeta">Loading repositories…</span>
+
+                <div class="section-head">Pinned Projects</div>
+                <div class="repo-list compact" id="pinnedList"></div>
+
+                <div class="section-head">Currently Active</div>
                 <div class="repo-list" id="featuredList"></div>
+
+                <div class="cta-row">
+                  <a class="cta-btn" href="https://github.com/ashmaker000" target="_blank" rel="noreferrer">View GitHub</a>
+                  <a class="cta-btn ghost" href="#t5">Browse All Repos</a>
+                </div>
               </section>
             </main>
 
@@ -70,6 +90,15 @@
     </div>
   </div>
 
-  <script src="./script.js"></script>
+  <div class="repo-modal" id="repoModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="repoModalTitle">
+    <div class="repo-modal-backdrop" data-close="modal"></div>
+    <div class="repo-modal-card">
+      <button class="repo-modal-close" id="repoModalClose" aria-label="Close details">×</button>
+      <h2 id="repoModalTitle">Repository details</h2>
+      <div id="repoModalBody"></div>
+    </div>
+  </div>
+
+  <script src="./script.js" defer></script>
 </body>
 </html>
