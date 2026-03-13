@@ -2,7 +2,7 @@ const USER = 'ashmaker000';
 const API = `https://api.github.com/users/${USER}/repos?per_page=100&sort=updated`;
 const ACTIVE_TOPICS = ['wip', 'active', 'current', 'in-progress'];
 const ACTIVE_DAYS_FALLBACK = 21;
-const PINNED_REPOS = ['BeamMP-Tag', 'openclaw', 'PropHunt', 'ashmaker000.github.io'];
+const PINNED_REPOS = ['BeamMP-PropHunt', 'BeamMP-Traffic', 'BeamMP-Tag', 'BeamMP-CnR', 'BeamMP-CarHunt', 'ashmaker000.github.io'];
 
 const els = {
   meta: document.getElementById('profileMeta'),
