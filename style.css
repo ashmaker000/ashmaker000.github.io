@@ -250,3 +250,6 @@ a:focus-visible .icon, input:focus-visible, button:focus-visible { outline: 3px 
   .search-wrap input { padding: 9px 10px; }
   .filter-btn { font-size: 11px; padding: 5px 9px; }
 }
+
+.value-tags { display:flex; gap:6px; flex-wrap:wrap; margin: 6px 0 2px; }
+.value-tag { font-size:10px; text-transform:uppercase; letter-spacing:.4px; padding:2px 7px; border-radius:999px; background: rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.24); }

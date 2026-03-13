@@ -3,6 +3,14 @@ const API = `https://api.github.com/users/${USER}/repos?per_page=100&sort=update
 const ACTIVE_TOPICS = ['wip', 'active', 'current', 'in-progress'];
 const ACTIVE_DAYS_FALLBACK = 21;
 const PINNED_REPOS = ['BeamMP-PropHunt', 'BeamMP-Traffic', 'BeamMP-Tag', 'BeamMP-CnR', 'BeamMP-CarHunt', 'ashmaker000.github.io'];
+const VALUE_TAGS = {
+  'BeamMP-PropHunt': ['Gameplay','BeamMP','Live'],
+  'BeamMP-Traffic': ['Gameplay','Automation','Live'],
+  'BeamMP-Tag': ['Gameplay','BeamMP'],
+  'BeamMP-CnR': ['Gameplay','Server'],
+  'BeamMP-CarHunt': ['Gameplay','Mode'],
+  'ashmaker000.github.io': ['Web','Portfolio','UX']
+};
 
 const CASE_STUDIES = {
   'BeamMP-PropHunt': {
@@ -100,11 +108,19 @@ function repoPreviewImage(repo) {
   return `https://opengraph.githubassets.com/${seed}/${repo.full_name}`;
 }
 
+
+function valueTags(repo) {
+  const tags = VALUE_TAGS[repo.name] || [];
+  if (!tags.length) return '';
+  return `<div class="value-tags">${tags.map(t => `<span class="value-tag">${esc(t)}</span>`).join('')}</div>`;
+}
+
 function card(repo) {
   return `<article class="repo-card">
     <h3><a href="${esc(repo.html_url)}" data-track="repo-open" target="_blank" rel="noreferrer">${esc(repo.name)}</a></h3>
     <div class="desc">${esc(repo.description || 'No description yet.')}</div>
     <div class="meta">★ ${repo.stargazers_count} • Forks ${repo.forks_count} • Open issues ${repo.open_issues_count}</div>
+    ${valueTags(repo)}
     ${badges(repo)}
     <div class="card-actions">
       <button class="btn" data-action="details" data-repo="${esc(repo.name)}">Details</button>
@@ -121,6 +137,7 @@ function caseStudyCard(repo) {
     <img class="repo-thumb" loading="lazy" src="${repoPreviewImage(repo)}" alt="${esc(repo.name)} preview" referrerpolicy="no-referrer" />
     <h3><a href="${esc(repo.html_url)}" data-track="repo-open" target="_blank" rel="noreferrer">${esc(repo.name)}</a></h3>
     <div class="badges"><span class="badge case">Case study</span>${isActive(repo) ? '<span class="badge active">Active</span>' : ''}</div>
+    ${valueTags(repo)}
     <div class="meta"><strong>Problem:</strong> ${esc(c.problem)}</div>
     <div class="meta"><strong>Solution:</strong> ${esc(c.solution)}</div>
     <div class="meta"><strong>Result:</strong> ${esc(c.result)}</div>
