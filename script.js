@@ -8,20 +8,17 @@ const CASE_STUDIES = {
   'BeamMP-PropHunt': {
     problem: 'PropHunt needed stable round flow and fewer mid-game failures.',
     solution: 'Refactored round-state transitions, hardened timers/events, and added guard rails for edge cases.',
-    result: 'Smoother rounds, reduced desync incidents, and faster release confidence.',
-    whatIDid: ['Round-state machine tuning', 'Timer/event hardening', 'Regression preflight checks']
+    result: 'Smoother rounds, reduced desync incidents, and faster release confidence.'
   },
   'BeamMP-Traffic': {
     problem: 'Server world felt static and needed believable ambient traffic.',
     solution: 'Implemented scripted traffic logic plus compatibility checks across gameplay mods.',
-    result: 'More alive multiplayer sessions with maintainable, testable scripts.',
-    whatIDid: ['Traffic behavior scripting', 'Cross-mod compatibility checks', 'Runtime sanity guards']
+    result: 'More alive multiplayer sessions with maintainable, testable scripts.'
   },
   'ashmaker000.github.io': {
     problem: 'Portfolio lacked hierarchy and made key projects hard to evaluate quickly.',
     solution: 'Added curated highlights, filters/search, case studies, and detail modal UX.',
-    result: 'Faster scanning for visitors and stronger first-impression credibility.',
-    whatIDid: ['Navigation/IA redesign', 'Filter/search UX', 'Accessibility + perf pass']
+    result: 'Faster scanning for visitors and stronger first-impression credibility.'
   }
 };
 
@@ -103,11 +100,6 @@ function repoPreviewImage(repo) {
   return `https://opengraph.githubassets.com/${seed}/${repo.full_name}`;
 }
 
-function renderWhatIDid(list = []) {
-  if (!Array.isArray(list) || !list.length) return '';
-  return `<ul class="meta">${list.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`;
-}
-
 function card(repo) {
   return `<article class="repo-card">
     <h3><a href="${esc(repo.html_url)}" data-track="repo-open" target="_blank" rel="noreferrer">${esc(repo.name)}</a></h3>
@@ -132,7 +124,6 @@ function caseStudyCard(repo) {
     <div class="meta"><strong>Problem:</strong> ${esc(c.problem)}</div>
     <div class="meta"><strong>Solution:</strong> ${esc(c.solution)}</div>
     <div class="meta"><strong>Result:</strong> ${esc(c.result)}</div>
-    ${renderWhatIDid(c.whatIDid)}
     <div class="card-actions"><button class="btn" data-action="details" data-repo="${esc(repo.name)}">Details</button></div>
   </article>`;
 }
