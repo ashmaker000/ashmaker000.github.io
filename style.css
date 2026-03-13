@@ -29,12 +29,7 @@ html, body, .page {
 #t2:target #p2,
 #t3:target #p3,
 #t4:target #p4,
-#t5:target #p5 { transform: translateX(-190%); transition-delay: .25s !important; }
-
-#t2:target #p1,
-#t3:target #p1,
-#t4:target #p1,
-#t5:target #p1 { background: #111; }
+#t5:target #p5 { transform: translateX(-200%); transition-delay: .25s !important; }
 
 .icon { color: #fff; font-size: 30px; display: block; }
 ul .icon:hover { opacity: 0.82; transform: translateX(2px); }
