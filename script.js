@@ -6,19 +6,22 @@ const PINNED_REPOS = ['BeamMP-PropHunt', 'BeamMP-Traffic', 'BeamMP-Tag', 'BeamMP
 
 const CASE_STUDIES = {
   'BeamMP-PropHunt': {
-    problem: 'Needed stable hide-and-seek style gameplay logic for BeamMP.',
-    solution: 'Built and hardened event/timer flow, game-state transitions, and reliability checks.',
-    result: 'Cleaner rounds, fewer desync issues, faster iteration loop.'
+    problem: 'PropHunt needed stable round flow and fewer mid-game failures.',
+    solution: 'Refactored round-state transitions, hardened timers/events, and added guard rails for edge cases.',
+    result: 'Smoother rounds, reduced desync incidents, and faster release confidence.',
+    whatIDid: ['Round-state machine tuning', 'Timer/event hardening', 'Regression preflight checks']
   },
   'BeamMP-Traffic': {
-    problem: 'Wanted more dynamic server gameplay with traffic behavior.',
-    solution: 'Implemented scripted traffic systems and mod interoperability checks.',
-    result: 'Richer multiplayer world feel with maintainable scripts.'
+    problem: 'Server world felt static and needed believable ambient traffic.',
+    solution: 'Implemented scripted traffic logic plus compatibility checks across gameplay mods.',
+    result: 'More alive multiplayer sessions with maintainable, testable scripts.',
+    whatIDid: ['Traffic behavior scripting', 'Cross-mod compatibility checks', 'Runtime sanity guards']
   },
   'ashmaker000.github.io': {
-    problem: 'Portfolio was functional but lacked structure and discoverability.',
-    solution: 'Added curated highlights, search/filters, and project details UX.',
-    result: 'Faster scanning for visitors and stronger presentation.'
+    problem: 'Portfolio lacked hierarchy and made key projects hard to evaluate quickly.',
+    solution: 'Added curated highlights, filters/search, case studies, and detail modal UX.',
+    result: 'Faster scanning for visitors and stronger first-impression credibility.',
+    whatIDid: ['Navigation/IA redesign', 'Filter/search UX', 'Accessibility + perf pass']
   }
 };
 
@@ -42,6 +45,7 @@ const els = {
 
 let allReposCache = [];
 let currentFilter = 'all';
+let modalLastFocus = null;
 
 const has = (s, arr) => arr.some(k => (s || '').toLowerCase().includes(k));
 
@@ -93,6 +97,17 @@ function badges(repo) {
   return `<div class="badges">${list.join('')}</div>`;
 }
 
+
+function repoPreviewImage(repo) {
+  const seed = encodeURIComponent(`${repo.name}-${repo.updated_at || ''}`);
+  return `https://opengraph.githubassets.com/${seed}/${repo.full_name}`;
+}
+
+function renderWhatIDid(list = []) {
+  if (!Array.isArray(list) || !list.length) return '';
+  return `<ul class="meta">${list.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`;
+}
+
 function card(repo) {
   return `<article class="repo-card">
     <h3><a href="${esc(repo.html_url)}" data-track="repo-open" target="_blank" rel="noreferrer">${esc(repo.name)}</a></h3>
@@ -111,18 +126,20 @@ function caseStudyCard(repo) {
   const c = CASE_STUDIES[repo.name];
   if (!c) return card(repo);
   return `<article class="repo-card">
+    <img class="repo-thumb" loading="lazy" src="${repoPreviewImage(repo)}" alt="${esc(repo.name)} preview" referrerpolicy="no-referrer" />
     <h3><a href="${esc(repo.html_url)}" data-track="repo-open" target="_blank" rel="noreferrer">${esc(repo.name)}</a></h3>
     <div class="badges"><span class="badge case">Case study</span>${isActive(repo) ? '<span class="badge active">Active</span>' : ''}</div>
     <div class="meta"><strong>Problem:</strong> ${esc(c.problem)}</div>
     <div class="meta"><strong>Solution:</strong> ${esc(c.solution)}</div>
     <div class="meta"><strong>Result:</strong> ${esc(c.result)}</div>
+    ${renderWhatIDid(c.whatIDid)}
     <div class="card-actions"><button class="btn" data-action="details" data-repo="${esc(repo.name)}">Details</button></div>
   </article>`;
 }
 
 function render(el, repos, opts = {}) {
   if (!repos.length) {
-    el.innerHTML = `<div class="empty">No repositories in this section.</div>`;
+    el.innerHTML = `<div class="empty">No repositories match this view yet.</div>`;
     return;
   }
   el.innerHTML = repos.map(r => opts.caseStudy ? caseStudyCard(r) : card(r)).join('');
@@ -177,6 +194,22 @@ function applyFilter(repos, filter) {
   }
 }
 
+function trapFocusInModal(e) {
+  if (!els.modal?.classList.contains('open') || e.key !== 'Tab') return;
+  const focusables = els.modal.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+  if (!focusables.length) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  const current = document.activeElement;
+  if (e.shiftKey && current === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && current === last) {
+    e.preventDefault();
+    first.focus();
+  }
+}
+
 function openModal(repo) {
   if (!repo) return;
   const topics = (repo.topics || []).map(t => `<span class="badge">${esc(t)}</span>`).join(' ');
@@ -193,13 +226,17 @@ function openModal(repo) {
       <div class="k">Topics</div><div class="v">${topics || 'No topics'}</div>
       ${caseBlock}
     </div>`;
+  modalLastFocus = document.activeElement;
   els.modal.classList.add('open');
   els.modal.setAttribute('aria-hidden', 'false');
+  els.modal.querySelector('.repo-modal-card')?.setAttribute('tabindex','-1');
+  els.modal.querySelector('.repo-modal-card')?.focus();
 }
 
 function closeModal() {
   els.modal.classList.remove('open');
   els.modal.setAttribute('aria-hidden', 'true');
+  if (modalLastFocus && typeof modalLastFocus.focus === 'function') modalLastFocus.focus();
 }
 
 function wireInteractions() {
@@ -240,6 +277,7 @@ function wireInteractions() {
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
+    trapFocusInModal(e);
   });
 }
 
@@ -247,7 +285,7 @@ function renderAnalyticsHint(repoCount = 0) {
   const views = Number(localStorage.getItem('analytics:page-view') || '0');
   const opens = Number(localStorage.getItem('analytics:repo-open') || '0');
   const modal = Number(localStorage.getItem('analytics:modal-open') || '0');
-  const text = `Session insights: ${repoCount} repos • ${views} visits • ${opens} repo opens • ${modal} detail views`;
+  const text = `Live stats: ${repoCount} repos • ${views} visits • ${opens} opens • ${modal} detail views`; 
   if (els.analyticsHint) els.analyticsHint.textContent = text;
   if (els.heroStats) els.heroStats.textContent = text;
 }
