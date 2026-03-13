@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ashmaker000 • Projects</title>
+  <meta name="description" content="ashmaker000 projects: BeamNG/BeamMP mods, web automation, and tooling." />
   <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.css" />
   <link rel="stylesheet" href="./style.css" />
@@ -14,21 +15,23 @@
       <div class="ct" id="t3">
         <div class="ct" id="t4">
           <div class="ct" id="t5">
-            <ul id="menu">
-              <a href="#t1"><li class="icon fa fa-bolt" id="uno"></li></a>
-              <a href="#t2"><li class="icon fa fa-road" id="dos"></li></a>
-              <a href="#t3"><li class="icon fa fa-code" id="tres"></li></a>
-              <a href="#t4"><li class="icon fa fa-wrench" id="cuatro"></li></a>
-              <a href="#t5"><li class="icon fa fa-github" id="cinco"></li></a>
-            </ul>
+            <nav aria-label="Sections">
+              <ul id="menu">
+                <a href="#t1" aria-label="Currently active projects"><li class="icon fa fa-bolt" id="uno"><span>Active</span></li></a>
+                <a href="#t2" aria-label="BeamNG and mods"><li class="icon fa fa-road" id="dos"><span>BeamNG</span></li></a>
+                <a href="#t3" aria-label="Web, bots and automation"><li class="icon fa fa-code" id="tres"><span>Web/Bots</span></li></a>
+                <a href="#t4" aria-label="Tools and scripts"><li class="icon fa fa-wrench" id="cuatro"><span>Tools</span></li></a>
+                <a href="#t5" aria-label="All repositories"><li class="icon fa fa-github" id="cinco"><span>All Repos</span></li></a>
+              </ul>
+            </nav>
 
-            <div class="page" id="p1">
-              <section class="icon fa fa-bolt page-content">
+            <main class="page" id="p1">
+              <section class="icon fa fa-bolt page-content" aria-live="polite">
                 <span class="title">ashmaker000 · Currently Working On</span>
                 <span class="hint" id="profileMeta">Loading repositories…</span>
                 <div class="repo-list" id="featuredList"></div>
               </section>
-            </div>
+            </main>
 
             <div class="page" id="p2">
               <section class="icon fa fa-road page-content">
@@ -54,6 +57,10 @@
             <div class="page" id="p5">
               <section class="icon fa fa-github page-content">
                 <span class="title">All Repositories</span>
+                <div class="search-wrap">
+                  <label for="repoSearch">Filter repositories</label>
+                  <input id="repoSearch" type="search" placeholder="Search by name, description, language..." />
+                </div>
                 <div class="repo-list" id="allList"></div>
               </section>
             </div>

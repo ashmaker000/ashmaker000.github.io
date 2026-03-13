@@ -10,9 +10,13 @@ const els = {
   web: document.getElementById('webList'),
   tools: document.getElementById('toolsList'),
   all: document.getElementById('allList'),
+  search: document.getElementById('repoSearch'),
 };
 
+let allReposCache = [];
+
 const has = (s, arr) => arr.some(k => (s || '').toLowerCase().includes(k));
+
 function bucket(repo) {
   const text = `${repo.name} ${repo.description || ''}`.toLowerCase();
   if (has(text, ['beamng', 'beammp', 'mod', 'map'])) return 'beamng';
@@ -53,6 +57,23 @@ function getActiveRepos(repos) {
   });
 }
 
+function searchRepos(query, repos) {
+  const q = query.trim().toLowerCase();
+  if (!q) return repos;
+  return repos.filter(r => {
+    const hay = `${r.name} ${r.description || ''} ${r.language || ''}`.toLowerCase();
+    return hay.includes(q);
+  });
+}
+
+function wireSearch() {
+  if (!els.search) return;
+  els.search.addEventListener('input', () => {
+    const filtered = searchRepos(els.search.value, allReposCache);
+    render(els.all, filtered);
+  });
+}
+
 async function loadRepos() {
   try {
     const res = await fetch(API, {
@@ -61,8 +82,12 @@ async function loadRepos() {
       }
     });
     if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-    const repos = (await res.json()).filter(r => !r.fork)
+
+    const repos = (await res.json())
+      .filter(r => !r.fork)
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+    allReposCache = repos;
 
     const active = getActiveRepos(repos);
 
@@ -77,10 +102,11 @@ async function loadRepos() {
     els.meta.textContent = `${repos.length} repos loaded • showing ${Math.min(active.length, 8)} currently active (${modeLabel})`;
   } catch (e) {
     Object.values(els).forEach(v => {
-      if (v && v !== els.meta) v.innerHTML = '<div class="empty">Failed to load repositories.</div>';
+      if (v && v !== els.meta && v !== els.search) v.innerHTML = '<div class="empty">Failed to load repositories.</div>';
     });
     els.meta.textContent = `Failed to load repositories: ${e.message}`;
   }
 }
 
+wireSearch();
 loadRepos();
