@@ -14,13 +14,14 @@
   <meta name="twitter:title" content="ashmaker000 • Projects" />
   <meta name="twitter:description" content="BeamNG/BeamMP mods, web automation, and tools built by ashmaker000." />
 
+  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+  <link rel="icon" type="image/png" href="./favicon.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+
   <link rel="preconnect" href="https://api.github.com" crossorigin />
   <link rel="stylesheet" href="https://public.codepenassets.com/css/normalize-5.0.0.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.3.0/css/font-awesome.css" />
   <link rel="stylesheet" href="./style.css" />
-  <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
-  <link rel="icon" type="image/png" href="./favicon.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
 </head>
 <body>
   <div class="ct" id="t1">
@@ -40,8 +41,16 @@
 
             <main class="page" id="p1">
               <section class="icon fa fa-bolt page-content" aria-live="polite">
-                <span class="title">ashmaker000 · Currently Working On</span>
+                <div class="hero">
+                  <h1>Hey, I’m ashmaker000 👋</h1>
+                  <p>I build BeamMP gameplay systems, automation tools, and practical web projects. I focus on reliability, fast iteration, and clean player/user experience.</p>
+                  <div class="hero-stats" id="heroStats">Loading stats…</div>
+                </div>
+
                 <span class="hint" id="profileMeta">Loading repositories…</span>
+
+                <div class="section-head">Project Highlights</div>
+                <div class="repo-list compact" id="caseStudyList"></div>
 
                 <div class="section-head">Pinned Projects</div>
                 <div class="repo-list compact" id="pinnedList"></div>
@@ -56,26 +65,9 @@
               </section>
             </main>
 
-            <div class="page" id="p2">
-              <section class="icon fa fa-road page-content">
-                <span class="title">BeamNG / Mods</span>
-                <div class="repo-list" id="beamngList"></div>
-              </section>
-            </div>
-
-            <div class="page" id="p3">
-              <section class="icon fa fa-code page-content">
-                <span class="title">Web / Bots / Automation</span>
-                <div class="repo-list" id="webList"></div>
-              </section>
-            </div>
-
-            <div class="page" id="p4">
-              <section class="icon fa fa-wrench page-content">
-                <span class="title">Tools / Scripts</span>
-                <div class="repo-list" id="toolsList"></div>
-              </section>
-            </div>
+            <div class="page" id="p2"><section class="icon fa fa-road page-content"><span class="title">BeamNG / Mods</span><div class="repo-list" id="beamngList"></div></section></div>
+            <div class="page" id="p3"><section class="icon fa fa-code page-content"><span class="title">Web / Bots / Automation</span><div class="repo-list" id="webList"></div></section></div>
+            <div class="page" id="p4"><section class="icon fa fa-wrench page-content"><span class="title">Tools / Scripts</span><div class="repo-list" id="toolsList"></div></section></div>
 
             <div class="page" id="p5">
               <section class="icon fa fa-github page-content">
@@ -84,7 +76,15 @@
                   <label for="repoSearch">Filter repositories</label>
                   <input id="repoSearch" type="search" placeholder="Search by name, description, language..." />
                 </div>
+                <div class="filter-row" id="filterRow">
+                  <button class="filter-btn active" data-filter="all">All</button>
+                  <button class="filter-btn" data-filter="beamng">BeamNG</button>
+                  <button class="filter-btn" data-filter="web">Web/Bots</button>
+                  <button class="filter-btn" data-filter="tools">Tools</button>
+                  <button class="filter-btn" data-filter="archived">Archived</button>
+                </div>
                 <div class="repo-list" id="allList"></div>
+                <div class="hint" id="analyticsHint"></div>
               </section>
             </div>
           </div>

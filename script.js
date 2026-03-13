@@ -4,8 +4,28 @@ const ACTIVE_TOPICS = ['wip', 'active', 'current', 'in-progress'];
 const ACTIVE_DAYS_FALLBACK = 21;
 const PINNED_REPOS = ['BeamMP-PropHunt', 'BeamMP-Traffic', 'BeamMP-Tag', 'BeamMP-CnR', 'BeamMP-CarHunt', 'ashmaker000.github.io'];
 
+const CASE_STUDIES = {
+  'BeamMP-PropHunt': {
+    problem: 'Needed stable hide-and-seek style gameplay logic for BeamMP.',
+    solution: 'Built and hardened event/timer flow, game-state transitions, and reliability checks.',
+    result: 'Cleaner rounds, fewer desync issues, faster iteration loop.'
+  },
+  'BeamMP-Traffic': {
+    problem: 'Wanted more dynamic server gameplay with traffic behavior.',
+    solution: 'Implemented scripted traffic systems and mod interoperability checks.',
+    result: 'Richer multiplayer world feel with maintainable scripts.'
+  },
+  'ashmaker000.github.io': {
+    problem: 'Portfolio was functional but lacked structure and discoverability.',
+    solution: 'Added curated highlights, search/filters, and project details UX.',
+    result: 'Faster scanning for visitors and stronger presentation.'
+  }
+};
+
 const els = {
   meta: document.getElementById('profileMeta'),
+  heroStats: document.getElementById('heroStats'),
+  caseStudies: document.getElementById('caseStudyList'),
   pinned: document.getElementById('pinnedList'),
   featured: document.getElementById('featuredList'),
   beamng: document.getElementById('beamngList'),
@@ -13,12 +33,15 @@ const els = {
   tools: document.getElementById('toolsList'),
   all: document.getElementById('allList'),
   search: document.getElementById('repoSearch'),
+  filterRow: document.getElementById('filterRow'),
+  analyticsHint: document.getElementById('analyticsHint'),
   modal: document.getElementById('repoModal'),
   modalBody: document.getElementById('repoModalBody'),
   modalClose: document.getElementById('repoModalClose'),
 };
 
 let allReposCache = [];
+let currentFilter = 'all';
 
 const has = (s, arr) => arr.some(k => (s || '').toLowerCase().includes(k));
 
@@ -49,6 +72,19 @@ function bucket(repo) {
   return 'tools';
 }
 
+function track(key) {
+  const k = `analytics:${key}`;
+  const v = Number(localStorage.getItem(k) || '0') + 1;
+  localStorage.setItem(k, String(v));
+}
+
+function outboundLinks(repo) {
+  const links = [];
+  if (repo.homepage) links.push(`<a class="btn" href="${esc(repo.homepage)}" data-track="demo" target="_blank" rel="noreferrer">Demo</a>`);
+  if ((repo.description || '').toLowerCase().includes('doc')) links.push(`<a class="btn" href="${esc(repo.html_url)}#readme" data-track="docs" target="_blank" rel="noreferrer">Docs</a>`);
+  return links.join('');
+}
+
 function badges(repo) {
   const list = [];
   if (repo.language) list.push(`<span class="badge">${esc(repo.language)}</span>`);
@@ -59,23 +95,44 @@ function badges(repo) {
 
 function card(repo) {
   return `<article class="repo-card">
-    <h3><a href="${esc(repo.html_url)}" target="_blank" rel="noreferrer">${esc(repo.name)}</a></h3>
+    <h3><a href="${esc(repo.html_url)}" data-track="repo-open" target="_blank" rel="noreferrer">${esc(repo.name)}</a></h3>
     <div class="desc">${esc(repo.description || 'No description yet.')}</div>
     <div class="meta">★ ${repo.stargazers_count} • Forks ${repo.forks_count} • Open issues ${repo.open_issues_count}</div>
     ${badges(repo)}
     <div class="card-actions">
       <button class="btn" data-action="details" data-repo="${esc(repo.name)}">Details</button>
-      <a class="btn" href="${esc(repo.html_url)}" target="_blank" rel="noreferrer">Open</a>
+      <a class="btn" href="${esc(repo.html_url)}" data-track="repo-open" target="_blank" rel="noreferrer">Open</a>
+      ${outboundLinks(repo)}
     </div>
   </article>`;
 }
 
-function render(el, repos) {
+function caseStudyCard(repo) {
+  const c = CASE_STUDIES[repo.name];
+  if (!c) return card(repo);
+  return `<article class="repo-card">
+    <h3><a href="${esc(repo.html_url)}" data-track="repo-open" target="_blank" rel="noreferrer">${esc(repo.name)}</a></h3>
+    <div class="badges"><span class="badge case">Case study</span>${isActive(repo) ? '<span class="badge active">Active</span>' : ''}</div>
+    <div class="meta"><strong>Problem:</strong> ${esc(c.problem)}</div>
+    <div class="meta"><strong>Solution:</strong> ${esc(c.solution)}</div>
+    <div class="meta"><strong>Result:</strong> ${esc(c.result)}</div>
+    <div class="card-actions"><button class="btn" data-action="details" data-repo="${esc(repo.name)}">Details</button></div>
+  </article>`;
+}
+
+function render(el, repos, opts = {}) {
   if (!repos.length) {
-    el.innerHTML = '<div class="empty">No repositories in this section.</div>';
+    el.innerHTML = `<div class="empty">No repositories in this section.</div>`;
     return;
   }
-  el.innerHTML = repos.map(card).join('');
+  el.innerHTML = repos.map(r => opts.caseStudy ? caseStudyCard(r) : card(r)).join('');
+}
+
+function renderError(message) {
+  const html = `<div class="empty">${esc(message)}</div><button class="btn retry-btn" id="retryLoad">Retry</button>`;
+  [els.caseStudies, els.pinned, els.featured, els.beamng, els.web, els.tools, els.all].forEach(v => { if (v) v.innerHTML = html; });
+  const retry = document.getElementById('retryLoad');
+  if (retry) retry.addEventListener('click', () => loadRepos(true));
 }
 
 function getActiveRepos(repos) {
@@ -84,7 +141,6 @@ function getActiveRepos(repos) {
     return topics.some(t => ACTIVE_TOPICS.includes(t));
   });
   if (byTopic.length) return byTopic;
-
   return repos.filter(r => {
     const pushed = new Date(r.pushed_at || r.updated_at).getTime();
     const recentCutoff = Date.now() - (ACTIVE_DAYS_FALLBACK * 24 * 60 * 60 * 1000);
@@ -95,8 +151,11 @@ function getActiveRepos(repos) {
 function getPinned(repos) {
   const map = new Map(repos.map(r => [r.name.toLowerCase(), r]));
   const ordered = PINNED_REPOS.map(name => map.get(name.toLowerCase())).filter(Boolean);
-  if (ordered.length) return ordered;
-  return repos.slice(0, 4);
+  return ordered.length ? ordered : repos.slice(0, 6);
+}
+
+function getCaseStudyRepos(repos) {
+  return repos.filter(r => CASE_STUDIES[r.name]).slice(0, 4);
 }
 
 function searchRepos(query, repos) {
@@ -108,9 +167,21 @@ function searchRepos(query, repos) {
   });
 }
 
+function applyFilter(repos, filter) {
+  switch (filter) {
+    case 'beamng': return repos.filter(r => bucket(r) === 'beamng');
+    case 'web': return repos.filter(r => bucket(r) === 'web');
+    case 'tools': return repos.filter(r => bucket(r) === 'tools');
+    case 'archived': return repos.filter(r => r.archived);
+    default: return repos;
+  }
+}
+
 function openModal(repo) {
   if (!repo) return;
   const topics = (repo.topics || []).map(t => `<span class="badge">${esc(t)}</span>`).join(' ');
+  const c = CASE_STUDIES[repo.name];
+  const caseBlock = c ? `<div class="k">Case Study</div><div class="v"><strong>Problem:</strong> ${esc(c.problem)}<br/><strong>Solution:</strong> ${esc(c.solution)}<br/><strong>Result:</strong> ${esc(c.result)}</div>` : '';
   els.modalBody.innerHTML = `
     <div class="modal-grid">
       <div class="k">Repository</div><div class="v"><a href="${esc(repo.html_url)}" target="_blank" rel="noreferrer">${esc(repo.full_name)}</a></div>
@@ -120,6 +191,7 @@ function openModal(repo) {
       <div class="k">Stats</div><div class="v">★ ${repo.stargazers_count} • Forks ${repo.forks_count} • Open issues ${repo.open_issues_count}</div>
       <div class="k">Updated</div><div class="v">${new Date(repo.updated_at).toLocaleString()} (${daysAgo(repo.updated_at)} days ago)</div>
       <div class="k">Topics</div><div class="v">${topics || 'No topics'}</div>
+      ${caseBlock}
     </div>`;
   els.modal.classList.add('open');
   els.modal.setAttribute('aria-hidden', 'false');
@@ -130,27 +202,40 @@ function closeModal() {
   els.modal.setAttribute('aria-hidden', 'true');
 }
 
-function wireSearch() {
-  if (!els.search) return;
-  els.search.addEventListener('input', () => {
-    const filtered = searchRepos(els.search.value, allReposCache);
-    render(els.all, filtered);
-  });
-}
+function wireInteractions() {
+  if (els.search) {
+    els.search.addEventListener('input', () => {
+      const filtered = applyFilter(searchRepos(els.search.value, allReposCache), currentFilter);
+      render(els.all, filtered);
+    });
+  }
 
-function wireModal() {
+  if (els.filterRow) {
+    els.filterRow.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-filter]');
+      if (!btn) return;
+      currentFilter = btn.getAttribute('data-filter') || 'all';
+      els.filterRow.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+      const filtered = applyFilter(searchRepos(els.search?.value || '', allReposCache), currentFilter);
+      render(els.all, filtered);
+      track(`filter:${currentFilter}`);
+    });
+  }
+
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-action="details"]');
-    if (btn) {
-      const repoName = btn.getAttribute('data-repo');
+    const detailsBtn = e.target.closest('[data-action="details"]');
+    if (detailsBtn) {
+      const repoName = detailsBtn.getAttribute('data-repo');
       const repo = allReposCache.find(r => r.name.toLowerCase() === String(repoName).toLowerCase());
       openModal(repo);
+      track('modal-open');
       return;
     }
 
-    if (e.target?.matches('[data-close="modal"]') || e.target === els.modalClose) {
-      closeModal();
-    }
+    const tracked = e.target.closest('[data-track]');
+    if (tracked) track(tracked.getAttribute('data-track'));
+
+    if (e.target?.matches('[data-close="modal"]') || e.target === els.modalClose) closeModal();
   });
 
   document.addEventListener('keydown', (e) => {
@@ -158,40 +243,62 @@ function wireModal() {
   });
 }
 
-async function loadRepos() {
+function renderAnalyticsHint(repoCount = 0) {
+  const views = Number(localStorage.getItem('analytics:page-view') || '0');
+  const opens = Number(localStorage.getItem('analytics:repo-open') || '0');
+  const modal = Number(localStorage.getItem('analytics:modal-open') || '0');
+  const text = `Session insights: ${repoCount} repos • ${views} visits • ${opens} repo opens • ${modal} detail views`;
+  if (els.analyticsHint) els.analyticsHint.textContent = text;
+  if (els.heroStats) els.heroStats.textContent = text;
+}
+
+async function loadRepos(forceNetwork = false) {
   try {
-    const res = await fetch(API, {
-      headers: { Accept: 'application/vnd.github+json, application/vnd.github.mercy-preview+json' }
-    });
+    if (!forceNetwork) {
+      const cached = localStorage.getItem('repo-cache:v1');
+      if (cached) {
+        const repos = JSON.parse(cached);
+        if (Array.isArray(repos) && repos.length) {
+          allReposCache = repos;
+          hydrate(repos);
+        }
+      }
+    }
+
+    const res = await fetch(API, { headers: { Accept: 'application/vnd.github+json, application/vnd.github.mercy-preview+json' } });
     if (!res.ok) throw new Error(`GitHub API ${res.status}`);
 
-    const repos = (await res.json())
-      .filter(r => !r.fork)
-      .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
-
+    const repos = (await res.json()).filter(r => !r.fork).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
     allReposCache = repos;
-
-    const active = getActiveRepos(repos);
-    const pinned = getPinned(repos);
-
-    render(els.pinned, pinned);
-    render(els.featured, active.slice(0, 8));
-    render(els.beamng, repos.filter(r => bucket(r) === 'beamng'));
-    render(els.web, repos.filter(r => bucket(r) === 'web'));
-    render(els.tools, repos.filter(r => bucket(r) === 'tools'));
-    render(els.all, repos);
-
-    const usingTopics = active.some(r => Array.isArray(r.topics) && r.topics.some(t => ACTIVE_TOPICS.includes(String(t).toLowerCase())));
-    const modeLabel = usingTopics ? 'topic-tagged active repos' : `recently pushed (${ACTIVE_DAYS_FALLBACK}d)`;
-    els.meta.textContent = `${repos.length} repos loaded • pinned ${pinned.length} • showing ${Math.min(active.length, 8)} active (${modeLabel})`;
+    localStorage.setItem('repo-cache:v1', JSON.stringify(repos));
+    hydrate(repos);
   } catch (e) {
-    [els.pinned, els.featured, els.beamng, els.web, els.tools, els.all].forEach(v => {
-      if (v) v.innerHTML = '<div class="empty">Failed to load repositories.</div>';
-    });
-    els.meta.textContent = `Failed to load repositories: ${e.message}`;
+    if (!allReposCache.length) {
+      renderError(`Failed to load repositories: ${e.message}.`);
+      if (els.meta) els.meta.textContent = `GitHub API unavailable. Showing retry option.`;
+    }
   }
 }
 
-wireSearch();
-wireModal();
+function hydrate(repos) {
+  const active = getActiveRepos(repos);
+  const pinned = getPinned(repos);
+  const cases = getCaseStudyRepos(repos);
+
+  render(els.caseStudies, cases, { caseStudy: true });
+  render(els.pinned, pinned);
+  render(els.featured, active.slice(0, 8));
+  render(els.beamng, repos.filter(r => bucket(r) === 'beamng'));
+  render(els.web, repos.filter(r => bucket(r) === 'web'));
+  render(els.tools, repos.filter(r => bucket(r) === 'tools'));
+  render(els.all, applyFilter(searchRepos(els.search?.value || '', repos), currentFilter));
+
+  const usingTopics = active.some(r => Array.isArray(r.topics) && r.topics.some(t => ACTIVE_TOPICS.includes(String(t).toLowerCase())));
+  const modeLabel = usingTopics ? 'topic-tagged active repos' : `recently pushed (${ACTIVE_DAYS_FALLBACK}d)`;
+  if (els.meta) els.meta.textContent = `${repos.length} repos loaded • pinned ${pinned.length} • showing ${Math.min(active.length, 8)} active (${modeLabel})`;
+  renderAnalyticsHint(repos.length);
+}
+
+track('page-view');
+wireInteractions();
 loadRepos();
