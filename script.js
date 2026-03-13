@@ -3,6 +3,17 @@ const API = `https://api.github.com/users/${USER}/repos?per_page=100&sort=update
 const ACTIVE_TOPICS = ['wip', 'active', 'current', 'in-progress'];
 const ACTIVE_DAYS_FALLBACK = 21;
 const PINNED_REPOS = ['BeamMP-PropHunt', 'BeamMP-Traffic', 'BeamMP-Tag', 'BeamMP-CnR', 'BeamMP-CarHunt', 'ashmaker000.github.io'];
+const THUMBNAILS = {
+  "BeamMP-PropHunt": "./assets/thumbs/prophunt.jpg",
+  "BeamMP-Traffic": "./assets/thumbs/traffic.jpg",
+  "ashmaker000.github.io": "./assets/thumbs/portfolio.jpg"
+};
+const CASE_LINKS = {
+  "BeamMP-PropHunt": "./projects/prophunt.html",
+  "BeamMP-Traffic": "./projects/traffic.html",
+  "ashmaker000.github.io": "./projects/portfolio.html"
+};
+
 const VALUE_TAGS = {
   'BeamMP-PropHunt': ['Gameplay','BeamMP','Live'],
   'BeamMP-Traffic': ['Gameplay','Automation','Live'],
@@ -34,6 +45,9 @@ const els = {
   meta: document.getElementById('profileMeta'),
   heroStats: document.getElementById('heroStats'),
   caseStudies: document.getElementById('caseStudyList'),
+  proofList: document.getElementById('proofList'),
+  latestWorkList: document.getElementById('latestWorkList'),
+  themeToggle: document.getElementById('themeToggle'),
   pinned: document.getElementById('pinnedList'),
   featured: document.getElementById('featuredList'),
   beamng: document.getElementById('beamngList'),
@@ -105,7 +119,7 @@ function badges(repo) {
 
 function repoPreviewImage(repo) {
   const seed = encodeURIComponent(`${repo.name}-${repo.updated_at || ''}`);
-  return `https://opengraph.githubassets.com/${seed}/${repo.full_name}`;
+  return THUMBNAILS[repo.name] || `https://opengraph.githubassets.com/${seed}/${repo.full_name}`;
 }
 
 
@@ -141,7 +155,7 @@ function caseStudyCard(repo) {
     <div class="meta"><strong>Problem:</strong> ${esc(c.problem)}</div>
     <div class="meta"><strong>Solution:</strong> ${esc(c.solution)}</div>
     <div class="meta"><strong>Result:</strong> ${esc(c.result)}</div>
-    <div class="card-actions"><button class="btn" data-action="details" data-repo="${esc(repo.name)}">Details</button></div>
+    <div class="card-actions"><button class="btn" data-action="details" data-repo="${esc(repo.name)}">Details</button>${CASE_LINKS[repo.name] ? `<a class="btn" href="${CASE_LINKS[repo.name]}">Read Case Study</a>` : ""}</div>
   </article>`;
 }
 
@@ -326,11 +340,42 @@ async function loadRepos(forceNetwork = false) {
   }
 }
 
+function renderProof() {
+  const proof = [
+    "BeamMP gameplay systems shipped and iterated weekly",
+    "Portfolio UX rebuilt for speed, clarity, and mobile",
+    "Automation + reliability-first development workflow"
+  ];
+  if (els.proofList) els.proofList.innerHTML = proof.map(p => `<div class="proof-item">${p}</div>`).join("");
+}
+
+function renderLatestWork(repos) {
+  const latest = repos.slice(0,3);
+  if (els.latestWorkList) render(els.latestWorkList, latest);
+}
+
+function applyTheme(theme) {
+  if (theme === "light") document.documentElement.setAttribute("data-theme","light");
+  else document.documentElement.removeAttribute("data-theme");
+  localStorage.setItem("theme", theme);
+}
+
+function wireTheme() {
+  const saved = localStorage.getItem("theme") || "dark";
+  applyTheme(saved);
+  if (els.themeToggle) els.themeToggle.addEventListener("click", () => {
+    const next = (localStorage.getItem("theme") || "dark") === "dark" ? "light" : "dark";
+    applyTheme(next);
+  });
+}
+
 function hydrate(repos) {
   const active = getActiveRepos(repos);
   const pinned = getPinned(repos);
   const cases = getCaseStudyRepos(repos);
 
+  renderProof();
+  renderLatestWork(repos);
   render(els.caseStudies, cases, { caseStudy: true });
   render(els.pinned, pinned);
   render(els.featured, active.slice(0, 8));
@@ -346,5 +391,6 @@ function hydrate(repos) {
 }
 
 track('page-view');
+wireTheme();
 wireInteractions();
 loadRepos();

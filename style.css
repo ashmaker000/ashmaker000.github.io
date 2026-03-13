@@ -253,3 +253,18 @@ a:focus-visible .icon, input:focus-visible, button:focus-visible { outline: 3px 
 
 .value-tags { display:flex; gap:6px; flex-wrap:wrap; margin: 6px 0 2px; }
 .value-tag { font-size:10px; text-transform:uppercase; letter-spacing:.4px; padding:2px 7px; border-radius:999px; background: rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.24); }
+
+
+[data-theme="light"] {
+  --text: #111;
+  --panel-bg: rgba(255,255,255,0.76);
+  --card-bg: rgba(255,255,255,0.86);
+  --card-border: rgba(0,0,0,0.15);
+}
+[data-theme="light"] a, [data-theme="light"] .btn, [data-theme="light"] .cta-btn, [data-theme="light"] .social-link { color:#111; }
+.hero-actions { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+.proof-list { display:grid; gap:8px; margin: 8px 0; }
+.proof-item { background: rgba(255,255,255,.11); border:1px solid rgba(255,255,255,.2); border-radius:10px; padding:8px 10px; font-size:13px; }
+.contact-panel { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+.quick-nav { position: fixed; right: 10px; bottom: 95px; z-index: 8; }
+.quick-nav .btn { border-radius: 999px; }
